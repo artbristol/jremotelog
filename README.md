@@ -8,15 +8,17 @@ Usage
 
 Build with Maven.
 
+Copy ```target/jremotelog-[version]-jar-with-dependencies.jar``` to ```jremotelog.jar```.
+
 Register with loggly.com and make a note of the access token. 
 
 Generate an AES key in hex format e.g.
 
 ```head -c 1024 /dev/urandom | sha256sum | cut -c 1-32```
 
-Place a copy of src/main/resources/example.jremotelog.properties in /etc/jremotelog.properties
+Place a copy of ```src/main/resources/example.jremotelog.properties``` in ```/etc/jremotelog.properties```.
 
-Modify jremotelog.properties with the loggly access token, AES key, and name of the file you want to tail.
+Modify ```jremotelog.properties``` with the loggly access token, AES key, and name of the file you want to tail.
 
 Run ```java -jar jremotelog.jar```
 
@@ -27,6 +29,6 @@ Check you can retrieve the logs in the next section. Don't wait till you need to
 Retrieving logs
 ---------------
 
-Edit a copy of src/main/resources/example.retrieve.properties and add the AES key.
+Edit a copy of ```src/main/resources/example.retrieve.properties``` and add the AES key.
 
 Run ```java -cp jremotelog.jar eu.ocathain.jremotelog.viewer.ExistingLogViewer [location of jremotelog.retrieve.properties]```
