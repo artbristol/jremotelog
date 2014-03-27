@@ -17,19 +17,28 @@ import eu.ocathain.jremotelog.StartupChecks;
 
 public class ExistingLogViewer {
 
+	private static final int DEFAULT_HOURS_TO_RETRIEVE = 12;
+
 	private static final int PAGE_SIZE = 1000;
 
 	public static void main(String[] args) throws Exception {
-		if (args.length != 1) {
-			System.err.println("Expected 1 argument: properties file location");
+		if (args.length == 0) {
+			System.err
+					.println("usage: ExistingLogViewer properties-file-location [hours of logs to retrieve]");
 			System.exit(1);
 		}
 
 		File propertiesFile = new File(args[0]);
 		StartupChecks.checkPropertiesFileExistence(args, propertiesFile);
 
+		Integer hours = DEFAULT_HOURS_TO_RETRIEVE;
+
+		if (args.length > 1) {
+			hours = Integer.valueOf(args[1]);
+		}
+
 		LogViewerConfig config = LogViewerConfig.loadFromFile(propertiesFile);
-		new ExistingLogViewer(config).retrieveLast12Hours();
+		new ExistingLogViewer(config).retrieveLastNHours(hours);
 	}
 
 	private final LogViewerConfig config;
@@ -44,31 +53,26 @@ public class ExistingLogViewer {
 		restTemplate = create(config);
 	}
 
-	void retrieveLast12Hours() {
+	void retrieveLastNHours(Integer hours) {
 
 		Map<?, ?> response = restTemplate.getForObject("https://"
-				+ config.logglyRetrievalHost
-				+ "/apiv2/fields?q=*&from=-12h&until=now&order=asc&size="
-				+ PAGE_SIZE, Map.class);
+				+ config.logglyRetrievalHost + "/apiv2/fields?q=*&from=-"
+				+ hours + "h&until=now&order=asc&size=" + PAGE_SIZE, Map.class);
 
 		Map<?, ?> rsid = (Map<?, ?>) response.get("rsid");
 		String idForRetrieve = (String) rsid.get("id");
 
-		Map<?, ?> queryData = retrievePage(config, restTemplate, idForRetrieve,
-				0, encryptor);
+		Map<?, ?> queryData = retrievePage(idForRetrieve, 0);
 		int totalEvents = (Integer) queryData.get("total_events");
 		if (totalEvents > PAGE_SIZE) {
 			for (int pageId = 1; pageId * PAGE_SIZE < totalEvents; pageId++) {
-				retrievePage(config, restTemplate, idForRetrieve, pageId,
-						encryptor);
+				retrievePage(idForRetrieve, pageId);
 			}
 		}
 	}
 
 	@SuppressWarnings("unchecked")
-	private static Map<?, ?> retrievePage(LogViewerConfig config,
-			RestTemplate restTemplate, String idForRetrieve, int pageId,
-			Encryptor encryptor) {
+	private Map<?, ?> retrievePage(String idForRetrieve, int pageId) {
 		Map<?, ?> queryData = restTemplate.getForObject(
 				"https://" + config.logglyRetrievalHost + "/apiv2/events?rsid="
 						+ Long.valueOf(idForRetrieve) + "&page=" + pageId,

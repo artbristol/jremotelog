@@ -16,6 +16,8 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 public class Encryptor {
 
+	private static final int IV_SIZE_BYTES = 8;
+
 	private static final int GCM_TAG_SIZE_BITS = 128;
 
 	static {
@@ -35,7 +37,7 @@ public class Encryptor {
 			throw new RuntimeException(e);
 		}
 
-		byte[] iv = new byte[8];
+		byte[] iv = new byte[IV_SIZE_BYTES];
 		new SecureRandom().nextBytes(iv);
 
 		counter = new BigInteger(iv);
@@ -63,7 +65,7 @@ public class Encryptor {
 	}
 
 	private byte[] toByteArrayForIv(BigInteger counter) {
-		return Arrays.copyOfRange(counter.toByteArray(), 0, 8);
+		return Arrays.copyOfRange(counter.toByteArray(), 0, IV_SIZE_BYTES);
 	}
 
 	public String decrypt(EncryptedOutput output) {
