@@ -1,14 +1,20 @@
 package eu.ocathain.jremotelog.viewer;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 
 import eu.ocathain.jremotelog.EncryptedOutput;
@@ -20,6 +26,8 @@ public class ExistingLogViewer {
 	private static final int DEFAULT_HOURS_TO_RETRIEVE = 12;
 
 	private static final int PAGE_SIZE = 1000;
+
+	private static final int MAX_EVENTS = 5000;
 
 	public static void main(String[] args) throws Exception {
 		if (args.length == 0) {
@@ -65,9 +73,16 @@ public class ExistingLogViewer {
 		Map<?, ?> queryData = retrievePage(idForRetrieve, 0);
 		int totalEvents = (Integer) queryData.get("total_events");
 		if (totalEvents > PAGE_SIZE) {
-			for (int pageId = 1; pageId * PAGE_SIZE < totalEvents; pageId++) {
+			for (int pageId = 1; pageId * PAGE_SIZE < totalEvents
+					&& pageId * PAGE_SIZE < MAX_EVENTS; pageId++) {
 				retrievePage(idForRetrieve, pageId);
 			}
+		}
+
+		if (totalEvents >= MAX_EVENTS) {
+			System.err.println("Warning: " + totalEvents
+					+ " lines available which is more than " + MAX_EVENTS
+					+ "; results were truncated.");
 		}
 	}
 
@@ -83,7 +98,6 @@ public class ExistingLogViewer {
 			String logmsg = (String) event.get("logmsg");
 			System.out.println(encryptor.decrypt(EncryptedOutput
 					.fromString(logmsg)));
-
 		}
 		return queryData;
 	}
@@ -94,8 +108,21 @@ public class ExistingLogViewer {
 				new AuthScope(config.logglyRetrievalHost, -1),
 				new UsernamePasswordCredentials(config.logglyUsername,
 						config.logglyPassword));
-		return new RestTemplate(new HttpComponentsClientHttpRequestFactory(
-				HttpClientBuilder.create()
-						.setDefaultCredentialsProvider(credentials).build()));
+		RestTemplate restTemplate = new RestTemplate(
+				new HttpComponentsClientHttpRequestFactory(HttpClientBuilder
+						.create().setDefaultCredentialsProvider(credentials)
+						.build()));
+		restTemplate.setErrorHandler(new DefaultResponseErrorHandler() {
+			@Override
+			public void handleError(ClientHttpResponse response)
+					throws IOException {
+				Logger.getAnonymousLogger().log(
+						Level.SEVERE,
+						"Loggly HTTP error: " + response.getStatusText() + "\n"
+								+ IOUtils.toString(response.getBody()));
+				super.handleError(response);
+			}
+		});
+		return restTemplate;
 	}
 }
