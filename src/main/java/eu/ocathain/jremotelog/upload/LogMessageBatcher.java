@@ -17,6 +17,8 @@ import eu.ocathain.jremotelog.Encryptor;
 
 class LogMessageBatcher implements Callable<Void> {
 
+	private static final int MIN_LINE_LENGTH = 80;
+
 	Logger logger = Logger.getAnonymousLogger();
 
 	private final RestTemplate restTemplate = new RestTemplate();
@@ -120,7 +122,7 @@ class LogMessageBatcher implements Callable<Void> {
 	}
 
 	private void addToBatch(List<EncryptedOutput> lines, String newLogLine) {
-		lines.add(encryptor.encrypt(newLogLine));
+		lines.add(encryptor.encrypt(newLogLine, MIN_LINE_LENGTH));
 	}
 
 	private long millisTillNextBatch() {

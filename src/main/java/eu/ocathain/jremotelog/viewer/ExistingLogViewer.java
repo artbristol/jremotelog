@@ -2,6 +2,7 @@ package eu.ocathain.jremotelog.viewer;
 
 import java.io.File;
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -94,10 +95,19 @@ public class ExistingLogViewer {
 				Map.class);
 
 		Object events = queryData.get("events");
+		
+		int eventCount=0;
 		for (Map<?, ?> event : (Iterable<Map<?, ?>>) events) {
 			String logmsg = (String) event.get("logmsg");
-			System.out.println(encryptor.decrypt(EncryptedOutput
-					.fromString(logmsg)));
+			try {
+				System.out.println(encryptor.decrypt(EncryptedOutput
+						.fromString(logmsg)));
+			} catch (GeneralSecurityException e) {
+				Logger.getAnonymousLogger().log(Level.SEVERE,
+						"Error [{2}], on page {0}; event {1}", new Object[] { pageId,eventCount, e.getMessage() });
+				Logger.getAnonymousLogger().log(Level.FINE, "Exception details", e);
+			}
+			eventCount++;
 		}
 		return queryData;
 	}
