@@ -1,7 +1,13 @@
 jremotelog
 ==========
 
-Remote encrypted logs using Java and Loggly
+Remote encrypted logs using Java and Loggly.
+
+Prequisites
+-----------
+
+Java 1.7
+Native `tail` command (due to a bug in Commons IO https://issues.apache.org/jira/browse/IO-279)
 
 Usage
 -----
@@ -33,7 +39,7 @@ Retrieving logs
 
 Do this on a different computer, because that's what you'll be doing when you really need the logs.
 
-Edit a copy of ```src/main/resources/example.retrieve.properties``` and add the AES key.
+Edit a copy of ```src/main/resources/example.retrieve.properties``` and add the AES key and your credentials.
 
 Run ```java -cp jremotelog.jar eu.ocathain.jremotelog.viewer.ExistingLogViewer [location of jremotelog.retrieve.properties] [number of hours]```
 
