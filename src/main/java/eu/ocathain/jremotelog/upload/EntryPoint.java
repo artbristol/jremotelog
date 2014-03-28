@@ -7,8 +7,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Logger;
 
-import org.apache.commons.io.input.Tailer;
-
 import eu.ocathain.jremotelog.StartupChecks;
 
 public class EntryPoint {
@@ -29,8 +27,8 @@ public class EntryPoint {
 
 		BlockingQueue<String> logLines = new LinkedBlockingQueue<String>();
 
-		executor.submit(new Tailer(new File(config.logFileToTail),
-				new LogFileTailer(logLines), 1000, true));
+		executor.submit(new UnixTailer(new File(config.logFileToTail),
+				new LogFileTailerListener(logLines), true, executor));
 		final LogMessageBatcher batcher = new LogMessageBatcher(config,
 				logLines);
 		executor.submit(batcher);

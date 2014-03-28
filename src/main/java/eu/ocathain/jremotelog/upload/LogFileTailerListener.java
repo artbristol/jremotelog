@@ -6,12 +6,12 @@ import java.util.logging.Logger;
 
 import org.apache.commons.io.input.TailerListenerAdapter;
 
-public class LogFileTailer extends TailerListenerAdapter {
+public class LogFileTailerListener extends TailerListenerAdapter {
 	private final BlockingQueue<String> logLines;
 
 	private final Logger logger = Logger.getAnonymousLogger();
 
-	public LogFileTailer(BlockingQueue<String> logLines) {
+	public LogFileTailerListener(BlockingQueue<String> logLines) {
 		super();
 		this.logLines = logLines;
 	}
