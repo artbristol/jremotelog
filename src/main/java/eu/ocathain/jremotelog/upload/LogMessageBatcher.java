@@ -1,12 +1,11 @@
 package eu.ocathain.jremotelog.upload;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ListIterator;
+import java.util.Collection;
+import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -37,37 +36,19 @@ class LogMessageBatcher implements Callable<Void> {
 
 	long timeForNextBatch = System.currentTimeMillis();
 
-	private final AtomicBoolean sendNow = new AtomicBoolean(false);
 	private Thread batchingThread;
+	private Queue<EncryptedOutput> lines = new ConcurrentLinkedQueue<>();
 
 	@Override
-	public Void call() {
+	public Void call() throws InterruptedException {
 		batchingThread = Thread.currentThread();
 		while (true) {
 			logger.fine("Starting poll of lines");
 
-			List<EncryptedOutput> lines = new ArrayList<>();
+			addToBatch(lines, logLines.take());
 
-			try {
-				addToBatch(lines, logLines.take());
-
-				while (millisTillNextBatch() > 0) {
-					pollForNextLineUntilNextBatch(lines);
-				}
-			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
-				if (sendNow.get()) {
-					logger.severe("Sending immediately");
-					if (!lines.isEmpty()) {
-						logger.severe("Batch is here");
-						sendBatch(lines);
-					} else {
-						logger.severe("Nothing to send");
-					}
-					return null;
-				} else {
-					throw new RuntimeException(e);
-				}
+			while (millisTillNextBatch() > 0) {
+				pollForNextLineUntilNextBatch(lines);
 			}
 
 			logger.fine("Finished waiting next batch");
@@ -77,27 +58,28 @@ class LogMessageBatcher implements Callable<Void> {
 			sendBatch(lines);
 			timeForNextBatch = System.currentTimeMillis()
 					+ config.batchIntervalMs;
-
 		}
 	}
 
 	public void sendImmediatelyAndFinish() {
-		sendNow.set(true);
+		logger.log(Level.INFO, "Shutting down");
 		batchingThread.interrupt();
+		if (!lines.isEmpty()) {
+			logger.log(Level.INFO, "Trying to send last batch");
+			sendBatch(lines);
+		}
 	}
 
-	private void sendBatch(List<EncryptedOutput> lines) {
+	private void sendBatch(Collection<EncryptedOutput> lines) {
 		String batch = createBatchMessage(lines);
 		logger.log(Level.FINE, "Posting: [{0}]", batch);
 		restTemplate.postForObject(config.logglyUrl, batch, String.class);
 	}
 
-	private String createBatchMessage(List<EncryptedOutput> lines) {
+	private String createBatchMessage(Collection<EncryptedOutput> lines) {
 		StringBuilder builder = new StringBuilder();
 
-		ListIterator<EncryptedOutput> it = lines.listIterator();
-		while (it.hasNext()) {
-			EncryptedOutput encrypted = it.next();
+		for (EncryptedOutput encrypted : lines) {
 			builder.append(encrypted.counter).append(',')
 					.append(encrypted.encryptedBase64).append("\n");
 		}
@@ -105,7 +87,7 @@ class LogMessageBatcher implements Callable<Void> {
 		return builder.toString();
 	}
 
-	private void pollForNextLineUntilNextBatch(List<EncryptedOutput> lines)
+	private void pollForNextLineUntilNextBatch(Collection<EncryptedOutput> lines)
 			throws InterruptedException {
 		logger.log(
 				Level.FINE,
@@ -121,7 +103,7 @@ class LogMessageBatcher implements Callable<Void> {
 		}
 	}
 
-	private void addToBatch(List<EncryptedOutput> lines, String newLogLine) {
+	private void addToBatch(Collection<EncryptedOutput> lines, String newLogLine) {
 		lines.add(encryptor.encrypt(newLogLine, MIN_LINE_LENGTH));
 	}
 

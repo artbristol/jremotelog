@@ -36,7 +36,6 @@ public class EntryPoint {
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
 			public void run() {
-				// This doesn't usually work, but it's worth a try.
 				batcher.sendImmediatelyAndFinish();
 			}
 		});
