@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.TailerListener;
@@ -73,5 +75,16 @@ public class UnixTailer implements Runnable {
 			}
 		});
 
+		try {
+			// Tail process should never finish.
+			int exitCode = tailProcess.waitFor();
+			Logger.getAnonymousLogger()
+					.log(Level.SEVERE,
+							"The tail process finished unexpectedly. Exit code {0}. Exiting!",
+							exitCode);
+			System.exit(1);
+		} catch (InterruptedException e) {
+			return;
+		}
 	}
 }
