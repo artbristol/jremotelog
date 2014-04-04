@@ -78,6 +78,7 @@ public class UnixTailer implements Runnable {
 		try {
 			// Tail process should never finish.
 			int exitCode = tailProcess.waitFor();
+			Thread.sleep(2000);
 			Logger.getAnonymousLogger()
 					.log(Level.SEVERE,
 							"The tail process finished unexpectedly. Exit code {0}. Exiting!",

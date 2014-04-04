@@ -37,7 +37,7 @@ class LogMessageBatcher implements Callable<Void> {
 	long timeForNextBatch = System.currentTimeMillis();
 
 	private Thread batchingThread;
-	private Queue<EncryptedOutput> lines = new ConcurrentLinkedQueue<>();
+	private final Queue<EncryptedOutput> lines = new ConcurrentLinkedQueue<>();
 
 	@Override
 	public Void call() throws InterruptedException {
@@ -45,17 +45,17 @@ class LogMessageBatcher implements Callable<Void> {
 		while (true) {
 			logger.fine("Starting poll of lines");
 
-			addToBatch(lines, logLines.take());
+			addToBatch(logLines.take());
 
 			while (millisTillNextBatch() > 0) {
-				pollForNextLineUntilNextBatch(lines);
+				pollForNextLineUntilNextBatch();
 			}
 
 			logger.fine("Finished waiting next batch");
 			if (lines.isEmpty()) {
 				throw new IllegalStateException("How did we end up here?");
 			}
-			sendBatch(lines);
+			sendBatch();
 			timeForNextBatch = System.currentTimeMillis()
 					+ config.batchIntervalMs;
 		}
@@ -66,14 +66,15 @@ class LogMessageBatcher implements Callable<Void> {
 		batchingThread.interrupt();
 		if (!lines.isEmpty()) {
 			logger.log(Level.INFO, "Trying to send last batch");
-			sendBatch(lines);
+			sendBatch();
 		}
 	}
 
-	private void sendBatch(Collection<EncryptedOutput> lines) {
+	private void sendBatch() {
 		String batch = createBatchMessage(lines);
 		logger.log(Level.FINE, "Posting: [{0}]", batch);
 		restTemplate.postForObject(config.logglyUrl, batch, String.class);
+		lines.clear();
 	}
 
 	private String createBatchMessage(Collection<EncryptedOutput> lines) {
@@ -87,7 +88,7 @@ class LogMessageBatcher implements Callable<Void> {
 		return builder.toString();
 	}
 
-	private void pollForNextLineUntilNextBatch(Collection<EncryptedOutput> lines)
+	private void pollForNextLineUntilNextBatch()
 			throws InterruptedException {
 		logger.log(
 				Level.FINE,
@@ -99,11 +100,11 @@ class LogMessageBatcher implements Callable<Void> {
 
 		logger.log(Level.FINE, "NewLogLine: [{0}]", newLogLine);
 		if (newLogLine != null) {
-			addToBatch(lines, newLogLine);
+			addToBatch(newLogLine);
 		}
 	}
 
-	private void addToBatch(Collection<EncryptedOutput> lines, String newLogLine) {
+	private void addToBatch(String newLogLine) {
 		lines.add(encryptor.encrypt(newLogLine, MIN_LINE_LENGTH));
 	}
 
