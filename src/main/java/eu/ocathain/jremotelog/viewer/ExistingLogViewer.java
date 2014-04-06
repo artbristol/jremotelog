@@ -95,8 +95,8 @@ public class ExistingLogViewer {
 				Map.class);
 
 		Object events = queryData.get("events");
-		
-		int eventCount=0;
+
+		int eventCount = 0;
 		for (Map<?, ?> event : (Iterable<Map<?, ?>>) events) {
 			String logmsg = (String) event.get("logmsg");
 			try {
@@ -104,8 +104,10 @@ public class ExistingLogViewer {
 						.fromString(logmsg)));
 			} catch (GeneralSecurityException e) {
 				Logger.getAnonymousLogger().log(Level.SEVERE,
-						"Error [{2}], on page {0}; event {1}", new Object[] { pageId,eventCount, e.getMessage() });
-				Logger.getAnonymousLogger().log(Level.FINE, "Exception details", e);
+						"Error [{2}], on page {0}; event {1}",
+						new Object[] { pageId, eventCount, e.getMessage() });
+				Logger.getAnonymousLogger().log(Level.FINE,
+						"Exception details", e);
 			}
 			eventCount++;
 		}
@@ -120,8 +122,8 @@ public class ExistingLogViewer {
 						config.logglyPassword));
 		RestTemplate restTemplate = new RestTemplate(
 				new HttpComponentsClientHttpRequestFactory(HttpClientBuilder
-						.create().setDefaultCredentialsProvider(credentials)
-						.build()));
+						.create().useSystemProperties()
+						.setDefaultCredentialsProvider(credentials).build()));
 		restTemplate.setErrorHandler(new DefaultResponseErrorHandler() {
 			@Override
 			public void handleError(ClientHttpResponse response)
