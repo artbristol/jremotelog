@@ -45,3 +45,8 @@ Edit a copy of ```src/main/resources/example.retrieve.properties``` and add the 
 Run ```java -cp jremotelog.jar eu.ocathain.jremotelog.viewer.ExistingLogViewer [location of jremotelog.retrieve.properties] [number of hours]```
 
 Recent log entries will be echoed to stdout.
+
+TODO
+----
+
+The IV is generated for each message using a counter. The first counter is generated randomly, but this carries a small risk of collisions when the process restarts. The counter should be persisted between restarts.

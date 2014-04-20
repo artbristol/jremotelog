@@ -7,9 +7,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Logger;
 
+import org.springframework.web.client.RestTemplate;
+
+import eu.ocathain.jremotelog.Encryptor;
 import eu.ocathain.jremotelog.StartupChecks;
 
 public class EntryPoint {
+
+	private static final int DEFAULT_PADDING = 120;
 
 	private static final ExecutorService executor = Executors
 			.newCachedThreadPool();
@@ -30,7 +35,8 @@ public class EntryPoint {
 		executor.submit(new UnixTailer(new File(config.logFileToTail),
 				new LogFileTailerListener(logLines), true, executor));
 		final LogMessageBatcher batcher = new LogMessageBatcher(config,
-				logLines);
+				logLines, new RestTemplate(),
+				Encryptor.createWithRandomizedIv(config), DEFAULT_PADDING);
 		executor.submit(batcher);
 
 		Runtime.getRuntime().addShutdownHook(new Thread() {

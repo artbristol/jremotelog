@@ -24,58 +24,49 @@ public class Encryptor {
 		Security.addProvider(new BouncyCastleProvider());
 	}
 
-	private BigInteger counter;
+	private BigInteger currentIv;
 
 	private final Cipher aes;
 
-	final SecretKeySpec aesKeySpec;
+	private final SecretKeySpec aesKeySpec;
 
-	public Encryptor(AesKeyProvider config) {
-		try {
-			aes = Cipher.getInstance("AES/GCM/NoPadding");
-		} catch (GeneralSecurityException e) {
-			throw new RuntimeException(e);
-		}
-
-		byte[] iv = new byte[IV_SIZE_BYTES];
-		new SecureRandom().nextBytes(iv);
-
-		counter = new BigInteger(iv);
-
-		byte[] aesKeyBytes = DatatypeConverter.parseHexBinary(config
-				.getAesKeyHexBinary());
-
-		if (aesKeyBytes.length > iv.length) {
-			throw new IllegalArgumentException("AES key length ("
-					+ aesKeyBytes.length * 8
-					+ " bits) should be equal to IV length (" + IV_SIZE_BYTES
-					* 8 + " bits)");
-		}
-
-		aesKeySpec = new SecretKeySpec(aesKeyBytes, "AES");
+	// private - use static create methods
+	private Encryptor(Cipher aes, SecretKeySpec aesKeySpec, BigInteger iv) {
+		this.aes = aes;
+		this.aesKeySpec = aesKeySpec;
+		this.currentIv = iv;
 	}
 
 	public EncryptedOutput encrypt(String message, int padLength) {
+		if (padLength < 0 || padLength > 255 /* arbitrary maximum */) {
+			throw new IllegalArgumentException("Pad length " + padLength
+					+ " should be between 0 and 255");
+		}
+
 		try {
-			counter = counter.add(BigInteger.ONE);
-			byte[] iv = toByteArrayForIv(counter);
+			currentIv = currentIv.add(BigInteger.ONE);
+			byte[] iv = toByteArrayForIv(currentIv);
 
 			aes.init(Cipher.ENCRYPT_MODE, aesKeySpec, new GCMParameterSpec(
 					GCM_TAG_SIZE_BITS, iv));
-			byte[] encrypted = aes.doFinal(String.format(
-					"%1$-" + padLength + "s", message).getBytes(
-					StandardCharsets.UTF_8));
+			String paddedString = message;
+			if (padLength > 0) {
+				paddedString = String.format("%1$-" + padLength + "s", message);
+			}
+
+			byte[] encrypted = aes.doFinal(paddedString
+					.getBytes(StandardCharsets.UTF_8));
 
 			String encryptedBase64 = DatatypeConverter
 					.printBase64Binary(encrypted);
-			return new EncryptedOutput(counter, encryptedBase64);
+			return new EncryptedOutput(currentIv, encryptedBase64);
 		} catch (GeneralSecurityException ex) {
 			throw new RuntimeException(ex);
 		}
 	}
 
-	private byte[] toByteArrayForIv(BigInteger counter) {
-		return Arrays.copyOfRange(counter.toByteArray(), 0, IV_SIZE_BYTES);
+	private byte[] toByteArrayForIv(BigInteger iv) {
+		return Arrays.copyOfRange(iv.toByteArray(), 0, IV_SIZE_BYTES);
 	}
 
 	public String decrypt(EncryptedOutput output)
@@ -83,11 +74,39 @@ public class Encryptor {
 		byte[] encrypted = DatatypeConverter
 				.parseBase64Binary(output.encryptedBase64);
 
-		byte[] iv = toByteArrayForIv(output.counter);
+		byte[] iv = toByteArrayForIv(output.iv);
 		aes.init(Cipher.DECRYPT_MODE, aesKeySpec, new GCMParameterSpec(
 				GCM_TAG_SIZE_BITS, iv));
 
 		byte[] decrypted = aes.doFinal(encrypted);
 		return new String(decrypted, StandardCharsets.UTF_8);
+	}
+
+	public static Encryptor createWithRandomizedIv(AesKeyProvider config) {
+		byte[] iv = new byte[IV_SIZE_BYTES];
+		new SecureRandom().nextBytes(iv);
+		return create(config, iv);
+	}
+
+	public static Encryptor create(AesKeyProvider config, byte[] ivBytes) {
+		byte[] aesKeyBytes = DatatypeConverter.parseHexBinary(config
+				.getAesKeyHexBinary());
+
+		if (aesKeyBytes.length > ivBytes.length) {
+			throw new IllegalArgumentException("AES key length ("
+					+ (aesKeyBytes.length * 8)
+					+ " bits) should be equal to IV length (" + (ivBytes.length * 8)
+					+ " bits)");
+		}
+
+		BigInteger iv = new BigInteger(ivBytes);
+		Cipher aes;
+		try {
+			aes = Cipher.getInstance("AES/GCM/NoPadding");
+		} catch (GeneralSecurityException e) {
+			throw new RuntimeException(e);
+		}
+		SecretKeySpec aesKeySpec = new SecretKeySpec(aesKeyBytes, "AES");
+		return new Encryptor(aes, aesKeySpec, iv);
 	}
 }

@@ -9,32 +9,32 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestOperations;
 
 import eu.ocathain.jremotelog.EncryptedOutput;
 import eu.ocathain.jremotelog.Encryptor;
 
 class LogMessageBatcher implements Callable<Void> {
 
-	private static final int MIN_LINE_LENGTH = 80;
+	private final Logger logger = Logger.getAnonymousLogger();
 
-	Logger logger = Logger.getAnonymousLogger();
-
-	private final RestTemplate restTemplate = new RestTemplate();
-
+	private final RestOperations restTemplate;
 	private final LogUploaderConfig config;
 	private final Encryptor encryptor;
-
 	private final BlockingQueue<String> logLines;
+	private final int padding;
 
 	public LogMessageBatcher(LogUploaderConfig config,
-			BlockingQueue<String> logLines) {
+			BlockingQueue<String> logLines, RestOperations restTemplate,
+			Encryptor encryptor, int padding) {
 		this.config = config;
-		this.encryptor = new Encryptor(config);
+		this.encryptor = encryptor;
 		this.logLines = logLines;
+		this.restTemplate = restTemplate;
+		this.padding = padding;
 	}
 
-	long timeForNextBatch = System.currentTimeMillis();
+	private long timeForNextBatch = System.currentTimeMillis();
 
 	private Thread batchingThread;
 	private final Queue<EncryptedOutput> lines = new ConcurrentLinkedQueue<>();
@@ -81,15 +81,14 @@ class LogMessageBatcher implements Callable<Void> {
 		StringBuilder builder = new StringBuilder();
 
 		for (EncryptedOutput encrypted : lines) {
-			builder.append(encrypted.counter).append(',')
+			builder.append(encrypted.iv).append(',')
 					.append(encrypted.encryptedBase64).append("\n");
 		}
 
 		return builder.toString();
 	}
 
-	private void pollForNextLineUntilNextBatch()
-			throws InterruptedException {
+	private void pollForNextLineUntilNextBatch() throws InterruptedException {
 		logger.log(
 				Level.FINE,
 				"Awaiting next batch; millisecondsUntilNextBatch {0}, lines size {1} ",
@@ -105,7 +104,7 @@ class LogMessageBatcher implements Callable<Void> {
 	}
 
 	private void addToBatch(String newLogLine) {
-		lines.add(encryptor.encrypt(newLogLine, MIN_LINE_LENGTH));
+		lines.add(encryptor.encrypt(newLogLine, padding));
 	}
 
 	private long millisTillNextBatch() {
