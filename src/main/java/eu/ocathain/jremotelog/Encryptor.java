@@ -16,7 +16,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 public class Encryptor {
 
-	private static final int IV_SIZE_BYTES = 16;
+	private static final int IV_SIZE_BYTES = 12;
 
 	private static final int GCM_TAG_SIZE_BITS = 128;
 
@@ -92,11 +92,10 @@ public class Encryptor {
 		byte[] aesKeyBytes = DatatypeConverter.parseHexBinary(config
 				.getAesKeyHexBinary());
 
-		if (aesKeyBytes.length > ivBytes.length) {
-			throw new IllegalArgumentException("AES key length ("
-					+ (aesKeyBytes.length * 8)
-					+ " bits) should be equal to IV length (" + (ivBytes.length * 8)
-					+ " bits)");
+		if (ivBytes.length != IV_SIZE_BYTES) {
+			throw new IllegalArgumentException("IV length incorrect (expected "
+					+ IV_SIZE_BYTES + " bytes but was " + ivBytes.length
+					+ " bytes)");
 		}
 
 		BigInteger iv = new BigInteger(ivBytes);

@@ -12,12 +12,12 @@ public class EncryptorTest {
 	private static final String AES_KEY_HEX = "DEADBEEFCAFEDEADBEEFCAFEDEADBEEF";
 
 	private static final byte[] INITIALIZATION_VECTOR = DatatypeConverter
-			.parseHexBinary("ABCDEF0123456789ABCDEF0123456789");
+			.parseHexBinary("ABCDEF0123456789ABCDEF01");
+	
+	private static final String CIPHERTEXT_BASE64 = "V8/14IkVyBHrEOp1ELa01Ga3eMzPlUA5LJeTqxuC+/rUWAz1tnjzBlKBughldCJpJwaUPuaOX4A+2Btdkd9AcHLtsSMmNLk=";
 
-	private static final String CIPHERTEXT_BASE64 = "/AGzDhTxYg3ol9bP7rVPVU4PCfEdvzjikdUGsYhR+Wu3TxEV7hd+v4zMaAoa6qS8+Gt3XFzETzNv54UyyztcDoiqj7uME+A=";
-
-	private static final String CIPHERTEXT_WITH_PADDING_BASE64 = "/AGzDhTxYg3ol9bP7rVPVU4PCfEdvzjikdUGsYhR+Wu3TxEV7hd+v4zMaAoa6qS8+Gt3XFzET055h0aQOOSZ+PpO1CxblbsWknZ5eSS5XmCwEyfB16ejD9yN9Ti7CPMPHP/aUQy9l/wiA3C46qGnMlVi8poWTHqNqWJuT+oHdM/MtQS2wrnwcD7V4QlN9ncM0pKnFjpd3xIsqFeQeeMD+wtv8oIlhg/YEXtbHri7JwX4TMPqHxsFVioqGr8+WQimKl7x4ZHRV5SeRhVGXwKqGJDl6yjbK5co";
-
+	private static final String CIPHERTEXT_WITH_PADDING_BASE64 = "V8/14IkVyBHrEOp1ELa01Ga3eMzPlUA5LJeTqxuC+/rUWAz1tnjzBlKBughldCJpJwaUPuaOXwRwx3EYW71boFLIJXeyPnaETQwPPjMebNFYsASI0x0fJK+seFrrlYgE+jYK3H3/VaBNaICeKmVQTM4CnFr4XPAVgfrVVPLOuX6hPzSg1AS6Q0y6kvZa9CJ7Cv6ITXaaHqe5PyU5+t/g/32pEE7wVvUTw7QvW2GoZmq2MkRyWc4dyn8eJUskvncWxPj3Jb8GZkJzR9OkyqKjM+IihatR6f7+";
+	
 	private static final String PLAINTEXT = "Why bother encrypting your logs, they already have root";
 
 	private static final AesKeyProvider AES_KEY_PROVIDER = new AesKeyProvider() {
