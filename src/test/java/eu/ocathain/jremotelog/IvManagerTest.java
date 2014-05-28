@@ -16,7 +16,7 @@ public class IvManagerTest {
 
 	@Test
 	public void testIvManager() {
-		IvManager ivManager = new IvManager("src/test/resources/ivFile");
+		IvManager ivManager = new IvManager("target/test-classes/ivFile");
 
 		Assert.assertArrayEquals(
 				ivManager.toByteArrayForIv(BigInteger.valueOf(101000)),
@@ -29,7 +29,7 @@ public class IvManagerTest {
 
 	@Test
 	public void testWithEmptyFile() {
-		IvManager ivManager = new IvManager("src/test/resources/emptyIvFile");
+		IvManager ivManager = new IvManager("target/test-classes/emptyIvFile");
 		Assert.assertSame(IvManager.IV_SIZE_BYTES, ivManager.next().length);
 	}
 
@@ -49,6 +49,13 @@ public class IvManagerTest {
 
 		IvManager ivManager = new IvManager(temp.getPath());
 
+		appendLotsAndCheck(temp, ivManager, "4000");
+
+		appendLotsAndCheck(temp, ivManager, "5000");
+	}
+
+	private void appendLotsAndCheck(File temp, IvManager ivManager,
+			String expected) throws IOException {
 		for (int i = 0; i < 1001; i++) {
 			ivManager.next();
 		}
@@ -56,7 +63,7 @@ public class IvManagerTest {
 		List<String> lines = Files.readAllLines(temp.toPath(),
 				StandardCharsets.US_ASCII);
 
-		Assert.assertEquals("4000", lines.get(lines.size() - 1));
+		Assert.assertEquals(expected, lines.get(lines.size() - 1));
 	}
 
 }

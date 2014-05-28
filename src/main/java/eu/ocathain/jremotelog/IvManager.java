@@ -41,6 +41,7 @@ public class IvManager {
 					.add(BigInteger.valueOf(PERSIST_EVERY_N_COUNT));
 		}
 
+		persist();
 	}
 
 	public byte[] next() {
@@ -49,17 +50,17 @@ public class IvManager {
 		currentIv = currentIv.add(BigInteger.ONE);
 		if (currentIv.mod(BigInteger.valueOf(PERSIST_EVERY_N_COUNT)).equals(
 				BigInteger.ZERO)) {
-			perist();
+			persist();
 		}
 		return byteArrayForIv;
 	}
 
-	private void perist() {
+	private void persist() {
 		Logger.getAnonymousLogger().log(Level.FINE,
 				"Writing the IV to the file [" + ivFile + "]");
 		try (FileWriterWithEncoding fw = new FileWriterWithEncoding(ivFile,
 				StandardCharsets.US_ASCII)) {
-			fw.append(currentIv.toString());
+			fw.append(currentIv.toString() + "\n");
 		} catch (IOException e) {
 			Logger.getAnonymousLogger().log(
 					Level.SEVERE,
