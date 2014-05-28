@@ -58,7 +58,7 @@ public class ExistingLogViewer {
 
 	public ExistingLogViewer(LogViewerConfig config) {
 		this.config = config;
-		encryptor = Encryptor.createWithRandomizedIv(config);
+		encryptor = Encryptor.create(config, null);
 		restTemplate = create(config);
 	}
 

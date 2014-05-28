@@ -16,5 +16,18 @@ public class StartupChecks {
 			System.exit(1);
 		}
 	}
+	public static void checkIvFile(String ivName) {
+		File file = new File(ivName);
+		if (!file.exists()) {
+			System.err.println("Expected to find a iv file at ["
+					+ ivName + "]");
+			System.exit(1);
+		}
+		if (!file.canWrite()) {
+			System.err.println("iv file at ["
+					+ ivName + "] is not writeable");
+			System.exit(1);
+		}
+	}
 
 }

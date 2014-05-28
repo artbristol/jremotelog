@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 import org.springframework.web.client.RestTemplate;
 
 import eu.ocathain.jremotelog.Encryptor;
+import eu.ocathain.jremotelog.IvManager;
 import eu.ocathain.jremotelog.StartupChecks;
 
 public class EntryPoint {
@@ -28,6 +29,8 @@ public class EntryPoint {
 		LogUploaderConfig config = LogUploaderConfig
 				.loadFromFile(propertiesFile);
 
+		StartupChecks.checkIvFile(config.ivFile);
+
 		logger.info("Starting up; tailing " + config.logFileToTail);
 
 		BlockingQueue<String> logLines = new LinkedBlockingQueue<String>();
@@ -35,8 +38,8 @@ public class EntryPoint {
 		executor.submit(new UnixTailer(new File(config.logFileToTail),
 				new LogFileTailerListener(logLines), true, executor));
 		final LogMessageBatcher batcher = new LogMessageBatcher(config,
-				logLines, new RestTemplate(),
-				Encryptor.createWithRandomizedIv(config), DEFAULT_PADDING);
+				logLines, new RestTemplate(), Encryptor.create(config,
+						new IvManager(config.ivFile)), DEFAULT_PADDING);
 		executor.submit(batcher);
 
 		Runtime.getRuntime().addShutdownHook(new Thread() {

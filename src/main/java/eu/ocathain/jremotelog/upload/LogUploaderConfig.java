@@ -16,16 +16,19 @@ public class LogUploaderConfig implements AesKeyProvider {
 	public final String aesKeyHexBinary;
 	public final String logFileToTail;
 	public final int batchIntervalMs;
+	public final String ivFile;
 
 	public LogUploaderConfig(Properties props) {
 		logglyUrl = props.getProperty("logglyUrl");
 		aesKeyHexBinary = props.getProperty("aesKeyHexBinary");
 		logFileToTail = props.getProperty("logFileToTail");
 		String batchIntervalMsString = props.getProperty("batchIntervalMs");
+		ivFile = props.getProperty("ivFile");
 		Objects.requireNonNull(logglyUrl);
 		Objects.requireNonNull(aesKeyHexBinary);
 		Objects.requireNonNull(logFileToTail);
 		Objects.requireNonNull(batchIntervalMsString);
+		Objects.requireNonNull(ivFile);
 		batchIntervalMs = Integer.valueOf(batchIntervalMsString);
 	}
 

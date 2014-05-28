@@ -29,6 +29,8 @@ Place a copy of ```src/main/resources/example.jremotelog.properties``` in ```/et
 
 Modify ```jremotelog.properties``` with the loggly access token, AES key, and name of the file you want to tail.
 
+Create an empty file ```/var/lib/misc/jremotelog.iv``` and make it append only (and writable)
+
 Run ```java -jar jremotelog.jar```
 
 The log file will be tailed, encrypted, and periodically uploaded to loggly.
