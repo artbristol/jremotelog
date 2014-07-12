@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestOperations;
 
 import eu.ocathain.jremotelog.EncryptedOutput;
@@ -73,8 +74,14 @@ class LogMessageBatcher implements Callable<Void> {
 	private void sendBatch() {
 		String batch = createBatchMessage(lines);
 		logger.log(Level.FINE, "Posting: [{0}]", batch);
-		restTemplate.postForObject(config.logglyUrl, batch, String.class);
-		lines.clear();
+
+        try {
+            restTemplate.postForObject(config.logglyUrl, batch, String.class);
+            lines.clear();
+        } catch (RestClientException e) {
+            logger.log(Level.SEVERE, "Problem posting logs to loggly; error was {0}", e.getMessage());
+            logger.log(Level.FINE, "Error trace", e);
+        }
 	}
 
 	private String createBatchMessage(Collection<EncryptedOutput> lines) {
