@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.io.Writer;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.CopyOption;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 
 import org.apache.commons.io.output.FileWriterWithEncoding;
@@ -14,9 +16,15 @@ import org.junit.Test;
 
 public class IvManagerTest {
 
-	@Test
-	public void testIvManager() {
-		IvManager ivManager = new IvManager("target/test-classes/ivFile");
+    public static final String TEST_IV_FILE = "target/test-classes/ivFile";
+    public static final String TEST_IV_FILE_FORTEST = TEST_IV_FILE + "forTest";
+
+    @Test
+	public void testIvManager() throws IOException {
+        Files.copy(new File(TEST_IV_FILE).toPath(), new File(TEST_IV_FILE_FORTEST).toPath(),
+                StandardCopyOption.REPLACE_EXISTING);
+
+		IvManager ivManager = new IvManager(TEST_IV_FILE_FORTEST);
 
 		Assert.assertArrayEquals(
 				ivManager.toByteArrayForIv(BigInteger.valueOf(101000)),
