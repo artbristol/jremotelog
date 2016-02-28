@@ -3,17 +3,17 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>eu.ocathain</groupId>
 	<artifactId>jremotelog</artifactId>
-	<version>0.0.9-SNAPSHOT</version>
+	<version>0.0.10-SNAPSHOT</version>
 
 
 	<properties>
-		<spring.version>4.0.0.RELEASE</spring.version>
+		<spring.version>4.2.5.RELEASE</spring.version>
 	</properties>
 	<dependencies>
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
 			<artifactId>bcprov-jdk15on</artifactId>
-			<version>1.50</version>
+			<version>1.54</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-io</groupId>
@@ -43,12 +43,12 @@
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpclient</artifactId>
-			<version>4.3.3</version>
+			<version>4.5.2</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.11</version>
+			<version>4.12</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -60,7 +60,7 @@
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
-			<version>1.9.5</version>
+			<version>1.10.19</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
