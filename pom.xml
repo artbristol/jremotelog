@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>eu.ocathain</groupId>
 	<artifactId>jremotelog</artifactId>
-	<version>0.0.10-SNAPSHOT</version>
+	<version>0.0.11-SNAPSHOT</version>
 
 
 	<properties>
@@ -13,7 +13,7 @@
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
 			<artifactId>bcprov-jdk15on</artifactId>
-			<version>1.54</version>
+			<version>1.56</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-io</groupId>
