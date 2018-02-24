@@ -6,7 +6,7 @@ Remote encrypted logs using Java and Loggly.
 Prequisites
 -----------
 
-Java 1.7
+Java 1.8
 
 Native `tail` command (due to a bug in Commons IO https://issues.apache.org/jira/browse/IO-279)
 
